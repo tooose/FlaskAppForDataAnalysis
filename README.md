@@ -1,5 +1,3 @@
-Certainly! Below is the `README.md` file for your code:
-
 ```markdown
 # Flask Application for Analyzing User Spending
 
