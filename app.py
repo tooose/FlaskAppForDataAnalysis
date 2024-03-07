@@ -7,8 +7,6 @@ import sqlite3
 app = Flask(__name__)
 
 
-
-
 @app.route('/total_spend/<int:user_id>', methods=['GET'])
 def totalSpendByUser(user_id):
     print(user_id)
@@ -70,7 +68,7 @@ def averageSpendingByAgeRange():
     else:
          return jsonify({'error': 'No Data found'}), 404
 
-@app.route('/write_to_mongodb/', methods=['POST'])
+@app.route('/write_to_mongodb/', methods=['GET', 'POST'])
 def write_to_mongodb():
     client = MongoClient()
     db=client.test_db
@@ -85,6 +83,46 @@ def write_to_mongodb():
     # post_id = posts.insert_one({'user_id': user_id, 'total_spending': total_spending}).inserted_id
     try:
         posts.insert_one(data)
+        send_message_to_telegram(chat_id, f"New data received - \nUser ID: {data['user_id']}, \nTotal spending: {data['total_spending']}")
         return jsonify({'message': 'Data written to MongoDB successfully.'}), 201
     except Exception as e:
         return jsonify({'message': f'Error writing to MongoDB: {str(e)}'}), 500
+
+   
+import requests
+import os
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler,  filters, ContextTypes
+# for useridd in write_to_mongodb:
+#     useridd = 'useridd'
+    
+def send_message_to_telegram(chat_id, text):
+    token = os.environ.get('TELETOKEN')
+    
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    # url = "https://api.telegram.org/bot" + token + "/sendMessage?chat_id=" + chat_id + "&text=" + text
+    payload = {
+        "chat_id": chat_id,
+        "text": text
+    }
+    response = requests.post(url, json=payload)
+    if response.status_code != 200:
+        print("Грешка при испраќање на порака до Telegram!")
+        print(token)
+        print(chat_id)
+    else:
+        print("Пораката e успешно испратена до Telegram.")
+
+# Пример на користење на функцијата за испраќање на порака
+chat_id = "6704443930"
+# text = data
+
+    
+if __name__ =='__main__':
+    app.run(debug = True) 
+
+#     {
+#     "user_id": "6",
+#     "total_spending" : "7890"
+   
+#   }
